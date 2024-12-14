@@ -28,3 +28,15 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+#Backend
+# Entorno virtual
+entorno
+
+# Archivos de migraciones temporales
+*/migrations
+*.pyc
+__pycache__/
+
+# Archivos generados por Django
+db.sqlite3
