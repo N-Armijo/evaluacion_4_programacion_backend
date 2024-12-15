@@ -5,8 +5,14 @@ import eventosService from '@/services/eventosService';
 import categoriasService from '@/services/categoriasService';
 
 const router = useRouter();
-const eventos = ref([]); // lista de eventos
-const categorias = ref([]); // listado de categorias para el select del formulario
+const eventos = ref([]); // Lista de eventos
+const categorias = ref([]); // Lista de categorías
+const pagination = ref({
+  count: 0,
+  next: null,
+  previous: null,
+}); // Estado de la paginación
+const currentPage = ref(1); // Página actual
 const nuevoEvento = ref({
   id: null,
   titulo: '',
@@ -30,10 +36,16 @@ const verificarAutenticacion = () => {
   }
 };
 
-const fetchEventos = async () => {
+const fetchEventos = async (page = 1) => {
   try {
-    const response = await eventosService.getEventos();
-    eventos.value = response.data.results || response.data;
+    const response = await eventosService.getEventos(page); // Enviar la página como parámetro
+    eventos.value = response.data.results || [];
+    pagination.value = {
+      count: response.data.count,
+      next: response.data.next,
+      previous: response.data.previous,
+    };
+    currentPage.value = page; // Actualiza la página actual
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al cargar eventos';
   }
@@ -48,10 +60,15 @@ const fetchCategorias = async () => {
   }
 };
 
+const goToPage = (page) => {
+  if (page > 0 && (pagination.value.next || pagination.value.previous)) {
+    fetchEventos(page);
+  }
+};
+
 const crearOActualizarEvento = async () => {
   try {
     if (isUpdating.value) {
-      // Actualizar evento
       await eventosService.updateEvento(nuevoEvento.value.id, {
         titulo: nuevoEvento.value.titulo,
         fecha: nuevoEvento.value.fecha,
@@ -62,11 +79,10 @@ const crearOActualizarEvento = async () => {
       });
       alert('Evento actualizado con éxito');
     } else {
-      // Crear evento
       await eventosService.createEvento(nuevoEvento.value);
       alert('Evento creado con éxito');
     }
-    await fetchEventos();
+    await fetchEventos(currentPage.value); // Refresca la página actual
     resetFormulario();
   } catch (err) {
     error.value = err.response?.data || 'Error al crear/actualizar evento';
@@ -77,7 +93,7 @@ const eliminarEvento = async (id) => {
   try {
     await eventosService.deleteEvento(id);
     alert('Evento eliminado con éxito');
-    await fetchEventos();
+    await fetchEventos(currentPage.value); // Refresca la página actual
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al eliminar evento';
   }
@@ -126,21 +142,6 @@ onMounted(() => {
         </div>
 
         <div class="mb-3">
-          <label for="hora" class="form-label">Hora</label>
-          <input type="time" id="hora" v-model="nuevoEvento.hora" class="form-control" required />
-        </div>
-
-        <div class="mb-3">
-          <label for="ubicacion" class="form-label">Ubicación</label>
-          <input type="text" id="ubicacion" v-model="nuevoEvento.ubicacion" class="form-control" required />
-        </div>
-
-        <div class="mb-3">
-          <label for="descripcion" class="form-label">Descripción</label>
-          <textarea id="descripcion" v-model="nuevoEvento.descripcion" class="form-control" rows="3" required></textarea>
-        </div>
-
-        <div class="mb-3">
           <label for="categoria" class="form-label">Categoría</label>
           <select id="categoria" v-model="nuevoEvento.categoria" class="form-select" required>
             <option value="" disabled>Selecciona una categoría</option>
@@ -186,6 +187,26 @@ onMounted(() => {
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginación -->
+      <nav v-if="pagination.count > 10" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" :class="{ disabled: !pagination.previous }">
+            <button class="page-link" @click="goToPage(currentPage - 1)">Anterior</button>
+          </li>
+          <li
+            class="page-item"
+            v-for="page in Math.ceil(pagination.count / 10)"
+            :key="page"
+            :class="{ active: currentPage === page }"
+          >
+            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+          </li>
+          <li class="page-item" :class="{ disabled: !pagination.next }">
+            <button class="page-link" @click="goToPage(currentPage + 1)">Siguiente</button>
+          </li>
+        </ul>
+      </nav>
     </div>
 
     <p v-if="error" class="text-danger text-center mt-3">Error: {{ error }}</p>

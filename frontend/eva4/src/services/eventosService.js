@@ -1,8 +1,9 @@
 import apiClient from './apiClient';
 
-const getEventos = async () => {
-  return apiClient.get('eventos/');
+const getEventos = async (page = 1) => {
+  return apiClient.get(`eventos/?page=${page}`);
 };
+
 
 const getEvento = async (id) => {
   return apiClient.get(`eventos/${id}/`);
