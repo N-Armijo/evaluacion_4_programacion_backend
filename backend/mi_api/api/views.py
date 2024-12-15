@@ -4,7 +4,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import BasePermission, AllowAny
 from rest_framework import status
 from .models import Categoria, Evento, Participante
-from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer, UserSerializer
+from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer, UserSerializer, CustomTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 # Permiso para solo lectura o acceso completo para superusuarios
@@ -100,3 +101,6 @@ def register_user(request):
         serializer.save()
         return Response({"message": "Usuario registrado con éxito."}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

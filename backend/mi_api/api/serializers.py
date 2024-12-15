@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Categoria, Evento, Participante
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,3 +61,12 @@ class UserSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+    
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Agregar el campo `is_superuser` al payload del token
+        token['is_superuser'] = user.is_superuser
+        return token

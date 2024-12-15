@@ -1,12 +1,16 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore'; // Store de autenticación
 import FormEvento from '@/components/FormEvento.vue';
 import TablaEventos from '@/components/TablaEventos.vue';
+import TablaEventosUsuario from '@/components/TablaEventosUsuario.vue';
 import eventosService from '@/services/eventosService';
 import categoriasService from '@/services/categoriasService';
 
 const router = useRouter();
+const authStore = useAuthStore(); // Acceder al estado de autenticación
+
 const eventos = ref([]);
 const categorias = ref([]);
 const pagination = ref({ count: 0, next: null, previous: null });
@@ -33,7 +37,7 @@ const totalPages = computed(() => Math.ceil(pagination.value.count / 10));
 
 // Verificar autenticación
 const verificarAutenticacion = () => {
-  const token = localStorage.getItem('access_token');
+  const token = authStore.isAuthenticated ? localStorage.getItem('access_token') : null;
   if (!token) {
     alert('Debes iniciar sesión para acceder a esta página.');
     router.push('/login');
@@ -49,7 +53,7 @@ const fetchEventos = async (page = 1) => {
       fecha: filtros.value.fecha || undefined, // Filtrar por fecha si se selecciona
     };
 
-    const response = await eventosService.getEventos(params); // Enviar los parámetros al servicio
+    const response = await eventosService.getEventos(params);
     eventos.value = response.data.results || [];
     pagination.value = {
       count: response.data.count,
@@ -61,7 +65,6 @@ const fetchEventos = async (page = 1) => {
     error.value = err.response?.data?.detail || 'Error al cargar eventos';
   }
 };
-
 
 // Cargar categorías
 const fetchCategorias = async () => {
@@ -150,14 +153,18 @@ onMounted(() => {
   <div class="mx-auto">
     <h2 class="text-center my-4">Gestión de Eventos</h2>
 
-
-
-    <!-- Formulario -->
-    <FormEvento :evento="nuevoEvento" :categorias="categorias" :isUpdating="isUpdating"
-      @submitForm="crearOActualizarEvento" @cancelForm="resetFormulario" />
+    <!-- Mostrar FormEvento solo para administradores -->
+    <FormEvento
+      v-if="authStore.isAdmin"
+      :evento="nuevoEvento"
+      :categorias="categorias"
+      :isUpdating="isUpdating"
+      @submitForm="crearOActualizarEvento"
+      @cancelForm="resetFormulario"
+    />
 
     <!-- Filtros -->
-    <div class="col-12 col-md-8 mx-auto">
+    <div class="col-12 col-md-6 mx-auto">
       <div class="row">
         <div class="col-md-4">
           <label for="filtroCategoria" class="form-label">Categoría</label>
@@ -182,13 +189,27 @@ onMounted(() => {
           </button>
         </div>
       </div>
-
-
     </div>
 
     <!-- Tabla -->
-    <TablaEventos :eventos="eventos" :currentPage="currentPage" :totalPages="totalPages"
-      @editEvento="cargarEventoParaActualizar" @deleteEvento="eliminarEvento" @pageChange="cambiarPagina" />
+    <template v-if="authStore.isAdmin">
+      <TablaEventos
+        :eventos="eventos"
+        :currentPage="currentPage"
+        :totalPages="totalPages"
+        @editEvento="cargarEventoParaActualizar"
+        @deleteEvento="eliminarEvento"
+        @pageChange="cambiarPagina"
+      />
+    </template>
+    <template v-else>
+      <TablaEventosUsuario
+        :eventos="eventos"
+        :currentPage="currentPage"
+        :totalPages="totalPages"
+        @pageChange="cambiarPagina"
+      />
+    </template>
 
     <p v-if="error" class="text-danger text-center mt-3">Error: {{ error }}</p>
   </div>
