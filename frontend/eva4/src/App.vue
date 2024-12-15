@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
 </script>
@@ -82,4 +82,46 @@ nav a:first-of-type {
     margin-top: 1rem;
   }
 }
-</style>
+</style> -->
+<template>
+  <div>
+    <h1>Lista de Eventos</h1>
+    <ul>
+      <li v-for="evento in eventos" :key="evento.id">
+        {{ evento.titulo }} - {{ evento.fecha }}
+      </li>
+    </ul>
+    <p v-if="error" style="color: red;">Error: {{ error }}</p>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted } from 'vue';
+import eventosService from './services/eventosService';
+
+export default {
+  setup() {
+    const eventos = ref([]); // Lista de eventos reactiva
+    const error = ref(null); // Para manejar errores
+
+    const fetchEventos = async () => {
+      try {
+        const response = await eventosService.getEventos();
+        eventos.value = response.data.results || response.data; // Manejar paginación si existe
+      } catch (err) {
+        error.value = err.message;
+      }
+    };
+
+    // Llama a fetchEventos cuando el componente se monta
+    onMounted(() => {
+      fetchEventos();
+    });
+
+    return {
+      eventos,
+      error,
+    };
+  },
+};
+</script>

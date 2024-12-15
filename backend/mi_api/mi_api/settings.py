@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'api'
 
 ]
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'mi_api.urls'
@@ -137,4 +139,10 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,  # Número de elementos por página.Se puede cambiar
 }
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',  # Puerto predeterminado de Vite
+    'http://127.0.0.1:5173',  # También localhost en formato IP
+]
 
+#permite todos los origenes (solo para pruebas locales)
+#CORS_ALLOW_ALL_ORIGINS = True
