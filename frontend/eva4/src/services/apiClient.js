@@ -11,9 +11,12 @@ const apiClient = axios.create({
 // Interceptor para incluir el token JWT automáticamente
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
-  if (token) {
+
+  // Excluir el token para rutas públicas como 'register/'
+  if (token && !config.url.includes('register/')) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
