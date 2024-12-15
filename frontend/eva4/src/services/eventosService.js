@@ -1,12 +1,8 @@
 import apiClient from './apiClient';
 
-const getEventos = async (page = 1) => {
-  return apiClient.get(`eventos/?page=${page}`);
-};
-
-
-const getEvento = async (id) => {
-  return apiClient.get(`eventos/${id}/`);
+// Cambiar para aceptar un objeto con parámetros (e.g., { page: 1, categoria: 2, fecha: '2024-12-16' })
+const getEventos = async (params) => {
+  return apiClient.get('eventos/', { params }); // Axios maneja automáticamente los parámetros
 };
 
 const createEvento = async (data) => {
@@ -23,7 +19,6 @@ const deleteEvento = async (id) => {
 
 export default {
   getEventos,
-  getEvento,
   createEvento,
   updateEvento,
   deleteEvento,
