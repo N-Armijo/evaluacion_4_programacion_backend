@@ -1,18 +1,16 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import FormEvento from '@/components/FormEvento.vue';
+import TablaEventos from '@/components/TablaEventos.vue';
 import eventosService from '@/services/eventosService';
 import categoriasService from '@/services/categoriasService';
 
 const router = useRouter();
-const eventos = ref([]); // Lista de eventos
-const categorias = ref([]); // Lista de categorías
-const pagination = ref({
-  count: 0,
-  next: null,
-  previous: null,
-}); // Estado de la paginación
-const currentPage = ref(1); // Página actual
+const eventos = ref([]);
+const categorias = ref([]);
+const pagination = ref({ count: 0, next: null, previous: null });
+const currentPage = ref(1);
 const nuevoEvento = ref({
   id: null,
   titulo: '',
@@ -23,11 +21,11 @@ const nuevoEvento = ref({
   categoria: '',
 });
 const error = ref(null);
-const isUpdating = ref(false); // Estado para cambiar el texto del botón del formulario
+const isUpdating = ref(false);
 
-// Texto dinámico del botón
-const formularioBotonTexto = computed(() => (isUpdating.value ? 'Guardar Cambios' : 'Crear Evento'));
+const totalPages = computed(() => Math.ceil(pagination.value.count / 10));
 
+// Verificar autenticación
 const verificarAutenticacion = () => {
   const token = localStorage.getItem('access_token');
   if (!token) {
@@ -36,74 +34,67 @@ const verificarAutenticacion = () => {
   }
 };
 
+// Cargar eventos
 const fetchEventos = async (page = 1) => {
   try {
-    const response = await eventosService.getEventos(page); // Enviar la página como parámetro
+    const response = await eventosService.getEventos(page);
     eventos.value = response.data.results || [];
     pagination.value = {
       count: response.data.count,
       next: response.data.next,
       previous: response.data.previous,
     };
-    currentPage.value = page; // Actualiza la página actual
+    currentPage.value = page;
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al cargar eventos';
   }
 };
 
+// Cargar categorías
 const fetchCategorias = async () => {
   try {
     const response = await categoriasService.getCategorias();
-    categorias.value = response.data.results || response.data;
+    categorias.value = response.data.results || [];
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al cargar categorías';
   }
 };
 
-const goToPage = (page) => {
-  if (page > 0 && (pagination.value.next || pagination.value.previous)) {
-    fetchEventos(page);
-  }
-};
-
-const crearOActualizarEvento = async () => {
+// Crear o actualizar evento
+const crearOActualizarEvento = async (evento) => {
   try {
     if (isUpdating.value) {
-      await eventosService.updateEvento(nuevoEvento.value.id, {
-        titulo: nuevoEvento.value.titulo,
-        fecha: nuevoEvento.value.fecha,
-        hora: nuevoEvento.value.hora,
-        ubicacion: nuevoEvento.value.ubicacion,
-        descripcion: nuevoEvento.value.descripcion,
-        categoria: nuevoEvento.value.categoria,
-      });
+      await eventosService.updateEvento(evento.id, evento);
       alert('Evento actualizado con éxito');
     } else {
-      await eventosService.createEvento(nuevoEvento.value);
+      await eventosService.createEvento(evento);
       alert('Evento creado con éxito');
     }
-    await fetchEventos(currentPage.value); // Refresca la página actual
+    await fetchEventos(currentPage.value);
     resetFormulario();
   } catch (err) {
     error.value = err.response?.data || 'Error al crear/actualizar evento';
   }
 };
 
+// Eliminar evento
 const eliminarEvento = async (id) => {
   try {
     await eventosService.deleteEvento(id);
     alert('Evento eliminado con éxito');
-    await fetchEventos(currentPage.value); // Refresca la página actual
+    await fetchEventos(currentPage.value);
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al eliminar evento';
   }
 };
 
+// Preparar formulario para edición
 const cargarEventoParaActualizar = (evento) => {
-  isUpdating.value = true; // Cambiar a modo actualización
-  nuevoEvento.value = { ...evento }; // Cargar los datos del evento en el formulario
+  isUpdating.value = true;
+  nuevoEvento.value = { ...evento };
 };
 
+// Resetear formulario
 const resetFormulario = () => {
   nuevoEvento.value = {
     id: null,
@@ -114,7 +105,14 @@ const resetFormulario = () => {
     descripcion: '',
     categoria: '',
   };
-  isUpdating.value = false; // Cambiar a modo creación
+  isUpdating.value = false;
+};
+
+// Cambiar de página
+const cambiarPagina = (page) => {
+  if (page > 0 && page <= totalPages.value) {
+    fetchEventos(page);
+  }
 };
 
 onMounted(() => {
@@ -128,86 +126,22 @@ onMounted(() => {
   <div class="mx-auto">
     <h2 class="text-center my-4">Gestión de Eventos</h2>
 
-    <!-- Formulario de creación/actualización -->
-    <div class="col-12 col-md-4 mx-auto">
-      <form @submit.prevent="crearOActualizarEvento" class="mb-4">
-        <div class="mb-3">
-          <label for="titulo" class="form-label">Título</label>
-          <input type="text" id="titulo" v-model="nuevoEvento.titulo" class="form-control" required />
-        </div>
+    <FormEvento
+      :evento="nuevoEvento"
+      :categorias="categorias"
+      :isUpdating="isUpdating"
+      @submitForm="crearOActualizarEvento"
+      @cancelForm="resetFormulario"
+    />
 
-        <div class="mb-3">
-          <label for="fecha" class="form-label">Fecha</label>
-          <input type="date" id="fecha" v-model="nuevoEvento.fecha" class="form-control" required />
-        </div>
-
-        <div class="mb-3">
-          <label for="categoria" class="form-label">Categoría</label>
-          <select id="categoria" v-model="nuevoEvento.categoria" class="form-select" required>
-            <option value="" disabled>Selecciona una categoría</option>
-            <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-              {{ categoria.nombre }}
-            </option>
-          </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-          {{ formularioBotonTexto }}
-        </button>
-        <button type="button" class="btn btn-secondary ms-2" v-if="isUpdating.value" @click="resetFormulario">
-          Cancelar
-        </button>
-      </form>
-    </div>
-
-    <!-- Tabla de eventos -->
-    <div class="col-12 col-md-8 mx-auto">
-      <table class="table table-hover text-center table-striped mt-4">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="evento in eventos" :key="evento.id">
-            <td>{{ evento.id }}</td>
-            <td>{{ evento.titulo }}</td>
-            <td>{{ evento.fecha }}</td>
-            <td>
-              <button class="btn btn-warning btn-sm text-dark" @click="cargarEventoParaActualizar(evento)">
-                Actualizar
-              </button>
-              <button class="btn btn-danger btn-sm ms-2" @click="eliminarEvento(evento.id)">
-                Eliminar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Paginación -->
-      <nav v-if="pagination.count > 10" class="mt-4">
-        <ul class="pagination justify-content-center">
-          <li class="page-item" :class="{ disabled: !pagination.previous }">
-            <button class="page-link" @click="goToPage(currentPage - 1)">Anterior</button>
-          </li>
-          <li
-            class="page-item"
-            v-for="page in Math.ceil(pagination.count / 10)"
-            :key="page"
-            :class="{ active: currentPage === page }"
-          >
-            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-          </li>
-          <li class="page-item" :class="{ disabled: !pagination.next }">
-            <button class="page-link" @click="goToPage(currentPage + 1)">Siguiente</button>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    <TablaEventos
+      :eventos="eventos"
+      :currentPage="currentPage"
+      :totalPages="totalPages"
+      @editEvento="cargarEventoParaActualizar"
+      @deleteEvento="eliminarEvento"
+      @pageChange="cambiarPagina"
+    />
 
     <p v-if="error" class="text-danger text-center mt-3">Error: {{ error }}</p>
   </div>
