@@ -18,7 +18,7 @@ coverage
 /cypress/screenshots/
 
 # Editor directories and files
-/frontend/eva4/.vscode/*
+.vscode/*
 !.vscode/extensions.json
 .idea
 *.suo
