@@ -1,20 +1,49 @@
-# from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import BasePermission
 from .models import Categoria, Evento, Participante
 from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer
 
 # Create your views here.
+# Permiso para solo lectura o acceso completo para superusuarios
+class IsAdminOrReadOnly(BasePermission):
+    """
+    Permite acceso de solo lectura para usuarios regulares. Escritura solo para superusuarios.
+    """
+    def has_permission(self, request, view):
+        # Métodos seguros permitidos para todos
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        # Métodos de escritura permitidos solo a superusuarios
+        return request.user.is_superuser
+
+
+# Permiso para gestionar solo los propios registros como participante
+class IsOwnerOrAdmin(BasePermission):
+    """
+    Permite acceso total a superusuarios. Usuarios regulares solo pueden gestionar sus propios registros.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Superusuarios tienen acceso completo
+        if request.user.is_superuser:
+            return True
+        # Usuarios regulares solo pueden acceder a sus propios registros
+        return obj.correo == request.user.email
+
+
+# ViewSet para Categorías
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-class ParticipanteViewSet(viewsets.ModelViewSet):
-    queryset = Participante.objects.all()
-    serializer_class = ParticipanteSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+# ViewSet para Eventos
 class EventoViewSet(viewsets.ModelViewSet):
     queryset = Evento.objects.all()
     serializer_class = EventoSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
         queryset = self.queryset
@@ -45,3 +74,14 @@ class EventoViewSet(viewsets.ModelViewSet):
         })
 
 
+# ViewSet para Participantes
+class ParticipanteViewSet(viewsets.ModelViewSet):
+    queryset = Participante.objects.all()
+    serializer_class = ParticipanteSerializer
+    permission_classes = [IsOwnerOrAdmin]
+
+    def perform_create(self, serializer):
+        """
+        Asocia automáticamente el correo del usuario autenticado al registro.
+        """
+        serializer.save(correo=self.request.user.email)
