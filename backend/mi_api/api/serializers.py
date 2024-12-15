@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Categoria, Evento, Participante
 from rest_framework.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,3 +42,21 @@ class ParticipanteSerializer(serializers.ModelSerializer):
             raise ValidationError("Este usuario ya está registrado en el evento.")
         
         return data
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
+    def create(self, validated_data):
+        """
+        Crea un nuevo usuario con los datos validados.
+        """
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password']
+        )
+        return user

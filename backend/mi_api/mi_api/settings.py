@@ -140,8 +140,8 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Puerto predeterminado de Vite
-    'http://127.0.0.1:5173',  # También localhost en formato IP
+    'http://localhost:5173',  # puerto predeterminado de Vite, cambiar si se levanta con otro puerto (el que indique al levantar con npm run dev)
+    'http://127.0.0.1:5173',  # localhost en formato IP
 ]
 
 #permite todos los origenes (solo para pruebas locales)

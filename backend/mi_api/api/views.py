@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.permissions import BasePermission
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import BasePermission, AllowAny
+from rest_framework import status
 from .models import Categoria, Evento, Participante
-from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer
+from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer, UserSerializer
 
-# Create your views here.
+
 # Permiso para solo lectura o acceso completo para superusuarios
 class IsAdminOrReadOnly(BasePermission):
     """
@@ -85,3 +86,17 @@ class ParticipanteViewSet(viewsets.ModelViewSet):
         Asocia automáticamente el correo del usuario autenticado al registro.
         """
         serializer.save(correo=self.request.user.email)
+
+
+# Endpoint para registrar usuarios
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Permitir acceso sin autenticación
+def register_user(request):
+    """
+    Endpoint para registrar nuevos usuarios.
+    """
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Usuario registrado con éxito."}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

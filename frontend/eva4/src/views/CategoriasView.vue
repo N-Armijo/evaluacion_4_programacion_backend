@@ -4,6 +4,6 @@
 
 <template>
   <main>
-    <h2 class="text-center">Home view</h2>
+    <h2 class="text-center">Categorias view</h2>
   </main>
 </template>
