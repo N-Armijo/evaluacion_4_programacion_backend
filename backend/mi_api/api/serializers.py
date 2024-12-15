@@ -14,4 +14,14 @@ class EventoSerializer(serializers.ModelSerializer):
 class ParticipanteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participante
-        fields = '__all__'
+        fields = ['id', 'nombre', 'correo', 'evento']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context['request']
+
+        # Si no es superusuario, ocultar el correo
+        if not request.user.is_superuser:
+            representation.pop('correo', None)
+
+        return representation
