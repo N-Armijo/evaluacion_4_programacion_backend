@@ -100,6 +100,24 @@ class ParticipanteViewSet(viewsets.ModelViewSet):
             correo=self.request.user.email
         )
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        Permite a los usuarios desinscribirse de un evento al que están inscritos.
+        """
+        participante = self.get_object()
+
+        # Verificar que el participante corresponde al usuario autenticado
+        if participante.correo != request.user.email and not request.user.is_superuser:
+            return Response(
+                {"detail": "No tienes permiso para eliminar este registro."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        self.perform_destroy(participante)
+        print(f"Participante eliminado: {participante.correo} del evento {participante.evento.id}")
+        return Response({"detail": "Te has desinscrito del evento con éxito."}, status=status.HTTP_204_NO_CONTENT)
+
+
 
 
 
@@ -118,3 +136,13 @@ def register_user(request):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+@api_view(['GET'])
+def eventos_inscritos(request):
+    """
+    Devuelve una lista de eventos en los que el usuario autenticado está inscrito.
+    """
+    inscritos = Participante.objects.filter(correo=request.user.email)
+    eventos = [inscrito.evento for inscrito in inscritos]
+    serializer = EventoSerializer(eventos, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

@@ -19,7 +19,7 @@ const handleInscribirse = async (id) => {
   try {
     const response = await participantesService.createParticipante({ evento: id });
     console.log(`Inscripción exitosa: ${JSON.stringify(response.data)}`);
-    estadoEventos.value[id] = 'inscrito'; // Actualizar el estado local
+    estadoEventos.value[id] = response.data.id; // Guardar ID del participante
     alert('Te has inscrito en el evento.');
   } catch (err) {
     console.error('Error al inscribirse:', err.response?.data || err.message);
@@ -28,19 +28,17 @@ const handleInscribirse = async (id) => {
 };
 
 // Emitir evento para desinscribirse
-const handleDesinscribirse = async (id) => {
-  console.log(`Intentando desinscribirse del evento con ID: ${id}`);
+const handleDesinscribirse = async (eventoId) => {
+  console.log(`Intentando desinscribirse del evento con ID: ${eventoId}`);
   try {
-    const participante = Object.values(estadoEventos.value).find(
-      (estado) => estado.evento === id && estado.estado === 'inscrito'
-    );
-    if (!participante) {
+    const participanteId = estadoEventos.value[eventoId];
+    if (!participanteId) {
       alert('No estás inscrito en este evento.');
       return;
     }
-    await participantesService.deleteParticipante(participante.id);
-    console.log(`Desinscripción exitosa del evento con ID: ${id}`);
-    estadoEventos.value[id] = 'no-inscrito'; // Marcar como no inscrito
+    await participantesService.deleteParticipante(participanteId); // Usar el ID del participante
+    console.log(`Desinscripción exitosa del evento con ID: ${eventoId}`);
+    estadoEventos.value[eventoId] = null; // Limpiar estado
     alert('Te has desinscrito del evento.');
   } catch (err) {
     console.error('Error al desinscribirse:', err.response?.data || err.message);
@@ -63,9 +61,25 @@ const goToPage = (page) => {
 const inicializarEstado = () => {
   props.eventos.forEach((evento) => {
     if (!estadoEventos.value[evento.id]) {
-      estadoEventos.value[evento.id] = 'no-inscrito'; // Inicializar como no inscrito
+      estadoEventos.value[evento.id] = null; // Inicializar como no inscrito (null)
     }
   });
+};
+
+// Sincronizar estado de eventos inscritos desde el backend
+const sincronizarEstadoEventos = async () => {
+  try {
+    const response = await participantesService.getParticipantes();
+    const participantes = response.data;
+
+    // Recorrer todos los eventos y asignar estado basado en inscripción
+    props.eventos.forEach((evento) => {
+      const participante = participantes.find((p) => p.evento === evento.id);
+      estadoEventos.value[evento.id] = participante ? participante.id : null; // Guardar ID del participante
+    });
+  } catch (err) {
+    console.error('Error al sincronizar eventos inscritos:', err.response?.data || err.message);
+  }
 };
 
 // Recalcular estado cuando cambien los eventos
@@ -73,6 +87,7 @@ watch(() => props.eventos, inicializarEstado);
 
 onMounted(() => {
   inicializarEstado();
+  sincronizarEstadoEventos();
 });
 </script>
 
@@ -97,7 +112,7 @@ onMounted(() => {
             <button
               class="btn btn-primary btn-sm"
               @click="handleInscribirse(evento.id)"
-              :disabled="estadoEventos[evento.id] === 'inscrito'"
+              :disabled="estadoEventos[evento.id] !== null"
             >
               Inscribirse
             </button>
@@ -106,7 +121,7 @@ onMounted(() => {
             <button
               class="btn btn-danger btn-sm ms-2"
               @click="handleDesinscribirse(evento.id)"
-              :disabled="estadoEventos[evento.id] !== 'inscrito'"
+              :disabled="estadoEventos[evento.id] === null"
             >
               Desinscribirse
             </button>

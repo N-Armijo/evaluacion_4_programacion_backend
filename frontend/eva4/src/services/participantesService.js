@@ -20,10 +20,16 @@ const deleteParticipante = async (id) => {
   return apiClient.delete(`participantes/${id}/`);
 };
 
+const getEventosInscritos = async () => {
+  return apiClient.get('eventos-inscritos/');
+};
+
+
 export default {
   getParticipantes,
   getParticipante,
   createParticipante,
   updateParticipante,
   deleteParticipante,
+  getEventosInscritos,
 };

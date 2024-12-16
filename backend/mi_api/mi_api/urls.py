@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from api.views import CategoriaViewSet, EventoViewSet, ParticipanteViewSet, register_user, CustomTokenObtainPairView
+from api.views import CategoriaViewSet, EventoViewSet, ParticipanteViewSet, register_user, CustomTokenObtainPairView , eventos_inscritos
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -39,4 +39,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+
+    path('eventos-inscritos/', eventos_inscritos, name='eventos_inscritos'),
+
 ]
