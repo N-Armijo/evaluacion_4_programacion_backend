@@ -6,6 +6,9 @@ from rest_framework import status
 from .models import Categoria, Evento, Participante
 from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer, UserSerializer, CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.exceptions import ValidationError
+
+
 
 
 # Permiso para solo lectura o acceso completo para superusuarios
@@ -84,9 +87,20 @@ class ParticipanteViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Asocia automáticamente el correo del usuario autenticado al registro.
+        Inscribe al usuario autenticado en un evento, evitando duplicados.
         """
-        serializer.save(correo=self.request.user.email)
+        evento = serializer.validated_data.get('evento')
+        correo = self.request.user.email
+
+        if Participante.objects.filter(evento=evento, correo=correo).exists():
+            raise ValidationError("Ya estás inscrito en este evento.")
+
+        serializer.save(
+            nombre=self.request.user.username,
+            correo=self.request.user.email
+        )
+
+
 
 
 # Endpoint para registrar usuarios

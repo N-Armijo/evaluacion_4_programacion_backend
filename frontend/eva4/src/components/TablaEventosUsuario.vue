@@ -1,31 +1,79 @@
 <script setup>
+import { ref, watch, onMounted } from 'vue';
+import participantesService from '@/services/participantesService';
+
 const props = defineProps({
   eventos: Array, // Lista de eventos paginada
   currentPage: Number, // Página actual
   totalPages: Number, // Total de páginas
 });
 
-const emit = defineEmits(['inscribirse', 'desinscribirse', 'verDetalles', 'pageChange']);
+const emit = defineEmits(['pageChange']);
+
+// Estado local para manejar inscripciones
+const estadoEventos = ref({});
 
 // Emitir evento para inscribirse
-const handleInscribirse = (id) => {
-  emit('inscribirse', id);
+const handleInscribirse = async (id) => {
+  console.log(`Intentando inscribirse al evento con ID: ${id}`);
+  try {
+    const response = await participantesService.createParticipante({ evento: id });
+    console.log(`Inscripción exitosa: ${JSON.stringify(response.data)}`);
+    estadoEventos.value[id] = 'inscrito'; // Actualizar el estado local
+    alert('Te has inscrito en el evento.');
+  } catch (err) {
+    console.error('Error al inscribirse:', err.response?.data || err.message);
+    alert('Error al inscribirse en el evento.');
+  }
 };
 
 // Emitir evento para desinscribirse
-const handleDesinscribirse = (id) => {
-  emit('desinscribirse', id);
+const handleDesinscribirse = async (id) => {
+  console.log(`Intentando desinscribirse del evento con ID: ${id}`);
+  try {
+    const participante = Object.values(estadoEventos.value).find(
+      (estado) => estado.evento === id && estado.estado === 'inscrito'
+    );
+    if (!participante) {
+      alert('No estás inscrito en este evento.');
+      return;
+    }
+    await participantesService.deleteParticipante(participante.id);
+    console.log(`Desinscripción exitosa del evento con ID: ${id}`);
+    estadoEventos.value[id] = 'no-inscrito'; // Marcar como no inscrito
+    alert('Te has desinscrito del evento.');
+  } catch (err) {
+    console.error('Error al desinscribirse:', err.response?.data || err.message);
+    alert('Error al desinscribirse del evento.');
+  }
 };
 
 // Emitir evento para ver detalles
 const handleVerDetalles = (id) => {
-  emit('verDetalles', id);
+  console.log(`Intentando ver detalles del evento con ID: ${id}`);
 };
 
 // Cambiar página
 const goToPage = (page) => {
+  console.log(`Cambiando a la página: ${page}`);
   emit('pageChange', page);
 };
+
+// Inicializar el estado de los eventos
+const inicializarEstado = () => {
+  props.eventos.forEach((evento) => {
+    if (!estadoEventos.value[evento.id]) {
+      estadoEventos.value[evento.id] = 'no-inscrito'; // Inicializar como no inscrito
+    }
+  });
+};
+
+// Recalcular estado cuando cambien los eventos
+watch(() => props.eventos, inicializarEstado);
+
+onMounted(() => {
+  inicializarEstado();
+});
 </script>
 
 <template>
@@ -46,12 +94,20 @@ const goToPage = (page) => {
           <td>{{ evento.ubicacion }}</td>
           <td>
             <!-- Botón de inscribirse -->
-            <button class="btn btn-primary btn-sm" @click="handleInscribirse(evento.id)">
+            <button
+              class="btn btn-primary btn-sm"
+              @click="handleInscribirse(evento.id)"
+              :disabled="estadoEventos[evento.id] === 'inscrito'"
+            >
               Inscribirse
             </button>
 
             <!-- Botón de desinscribirse -->
-            <button class="btn btn-danger btn-sm ms-2" @click="handleDesinscribirse(evento.id)">
+            <button
+              class="btn btn-danger btn-sm ms-2"
+              @click="handleDesinscribirse(evento.id)"
+              :disabled="estadoEventos[evento.id] !== 'inscrito'"
+            >
               Desinscribirse
             </button>
 

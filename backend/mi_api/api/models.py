@@ -21,7 +21,7 @@ class Evento(models.Model):
 
 class Participante(models.Model):
     nombre = models.CharField(max_length=150)
-    correo = models.EmailField(unique=True)
+    correo = models.EmailField()
     evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name="participantes")
 
     def __str__(self):

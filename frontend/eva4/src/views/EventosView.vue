@@ -7,6 +7,9 @@ import TablaEventos from '@/components/TablaEventos.vue';
 import TablaEventosUsuario from '@/components/TablaEventosUsuario.vue';
 import eventosService from '@/services/eventosService';
 import categoriasService from '@/services/categoriasService';
+//inicio cambio
+import participantesService from '@/services/participantesService';
+//fin cambio
 
 const router = useRouter();
 const authStore = useAuthStore(); // Acceder al estado de autenticación
@@ -147,6 +150,33 @@ onMounted(() => {
   fetchEventos();
   fetchCategorias();
 });
+
+//Inicio cambio
+// Inscribirse en un evento
+const inscribirseEvento = async (eventoId) => {
+  try {
+    await participantesService.createParticipante({ evento: eventoId });
+    alert('Te has inscrito al evento con éxito');
+  } catch (err) {
+    error.value = err.response?.data?.detail || 'Error al inscribirse en el evento';
+  }
+};
+
+// Desinscribirse de un evento
+const desinscribirseEvento = async (eventoId) => {
+  try {
+    await participantesService.deleteParticipante(eventoId);
+    alert('Te has desinscrito del evento con éxito');
+  } catch (err) {
+    error.value = err.response?.data?.detail || 'Error al desinscribirse del evento';
+  }
+};
+
+// Ver detalles del evento
+const verDetallesEvento = (eventoId) => {
+  router.push(`/eventos/${eventoId}`); // Redirigir a una vista de detalles
+};
+//fin cambio
 </script>
 
 <template>
@@ -203,12 +233,21 @@ onMounted(() => {
       />
     </template>
     <template v-else>
-      <TablaEventosUsuario
+      <!-- <TablaEventosUsuario
         :eventos="eventos"
         :currentPage="currentPage"
         :totalPages="totalPages"
         @pageChange="cambiarPagina"
-      />
+      /> -->
+      <TablaEventosUsuario
+      :eventos="eventos"
+      :currentPage="currentPage"
+      :totalPages="totalPages"
+      @inscribirse="inscribirseEvento"
+      @desinscribirse="desinscribirseEvento"
+      @verDetalles="verDetallesEvento"
+      @pageChange="cambiarPagina"
+    />
     </template>
 
     <p v-if="error" class="text-danger text-center mt-3">Error: {{ error }}</p>
