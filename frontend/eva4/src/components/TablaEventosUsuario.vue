@@ -11,15 +11,58 @@ const props = defineProps({
 const emit = defineEmits(['pageChange']);
 
 // Estado local para manejar inscripciones
-const estadoEventos = ref({});
+const estadoEventos = ref({}); // Diccionario que guarda si el usuario está inscrito en un evento
+
+// Sincronizar estado de inscripción desde el backend
+const sincronizarEstadoEventos = async () => {
+  console.log('Sincronizando estado de inscripciones...');
+  try {
+    // Realizar la petición al backend
+    const response = await participantesService.getParticipantes();
+    const participantes = response.data.results || response.data; // Verifica el formato del backend
+
+    // Verificar si los datos son un array
+    if (!Array.isArray(participantes)) {
+      console.error('Formato de datos inválido:', participantes);
+      return;
+    }
+
+    console.log('Lista de participantes obtenida:', participantes);
+
+    // Iterar sobre los eventos y sincronizar el estado
+    props.eventos.forEach((evento) => {
+      // Buscar si el usuario está inscrito en este evento
+      const participante = participantes.find((p) => p.evento === evento.id);
+
+      // Actualizar el estado del evento con el ID del participante o null
+      estadoEventos.value[evento.id] = participante ? participante.id : null;
+
+      // Depurar la información procesada
+      console.log(
+        `Evento ID: ${evento.id}, Participante encontrado: ${JSON.stringify(participante)}`
+      );
+      console.log(
+        `Estado actualizado para Evento ID ${evento.id}: Participante ID = ${estadoEventos.value[evento.id]}`
+      );
+    });
+
+    console.log('Estado de eventos actualizado:', estadoEventos.value);
+  } catch (err) {
+    // Capturar y mostrar errores de la petición
+    console.error('Error al sincronizar inscripciones:', err.response?.data || err.message);
+  }
+};
+
+
+
 
 // Emitir evento para inscribirse
-const handleInscribirse = async (id) => {
-  console.log(`Intentando inscribirse al evento con ID: ${id}`);
+const handleInscribirse = async (eventoId) => {
+  console.log(`Intentando inscribirse al evento con ID: ${eventoId}`);
   try {
-    const response = await participantesService.createParticipante({ evento: id });
-    console.log(`Inscripción exitosa: ${JSON.stringify(response.data)}`);
-    estadoEventos.value[id] = response.data.id; // Guardar ID del participante
+    const response = await participantesService.createParticipante({ evento: eventoId });
+    console.log('Inscripción exitosa:', response.data);
+    estadoEventos.value[eventoId] = response.data.id; // Guardar ID del participante en estado
     alert('Te has inscrito en el evento.');
   } catch (err) {
     console.error('Error al inscribirse:', err.response?.data || err.message);
@@ -30,26 +73,30 @@ const handleInscribirse = async (id) => {
 // Emitir evento para desinscribirse
 const handleDesinscribirse = async (eventoId) => {
   console.log(`Intentando desinscribirse del evento con ID: ${eventoId}`);
+  const participanteId = estadoEventos.value[eventoId];
+
+  // Imprimir el estado actual del participante asociado
+  console.log(`Estado actual para el evento ID ${eventoId}: Participante ID = ${participanteId}`);
+
+  if (!participanteId) {
+    console.error('El participante no tiene un ID válido para desinscribirse.');
+    alert('No estás inscrito en este evento.');
+    return;
+  }
+
   try {
-    const participanteId = estadoEventos.value[eventoId];
-    if (!participanteId) {
-      alert('No estás inscrito en este evento.');
-      return;
-    }
     await participantesService.deleteParticipante(participanteId); // Usar el ID del participante
-    console.log(`Desinscripción exitosa del evento con ID: ${eventoId}`);
+    console.log(`Desinscripción exitosa del evento con ID: ${eventoId}, Participante ID: ${participanteId}`);
     estadoEventos.value[eventoId] = null; // Limpiar estado
+    console.log(`Aqui una ayuda: participanteid: ${participanteId} - eventoid: ${eventoId}`)
     alert('Te has desinscrito del evento.');
   } catch (err) {
     console.error('Error al desinscribirse:', err.response?.data || err.message);
+    console.log(`Aqui una ayuda: participanteid: ${participanteId} - eventoid: ${eventoId}`)
     alert('Error al desinscribirse del evento.');
   }
 };
 
-// Emitir evento para ver detalles
-const handleVerDetalles = (id) => {
-  console.log(`Intentando ver detalles del evento con ID: ${id}`);
-};
 
 // Cambiar página
 const goToPage = (page) => {
@@ -57,36 +104,14 @@ const goToPage = (page) => {
   emit('pageChange', page);
 };
 
-// Inicializar el estado de los eventos
-const inicializarEstado = () => {
-  props.eventos.forEach((evento) => {
-    if (!estadoEventos.value[evento.id]) {
-      estadoEventos.value[evento.id] = null; // Inicializar como no inscrito (null)
-    }
-  });
-};
+// Inicializar estado local al cargar eventos
+watch(() => props.eventos, () => {
+  console.log('Eventos cambiaron, sincronizando estado...');
+  sincronizarEstadoEventos();
+});
 
-// Sincronizar estado de eventos inscritos desde el backend
-const sincronizarEstadoEventos = async () => {
-  try {
-    const response = await participantesService.getParticipantes();
-    const participantes = response.data;
-
-    // Recorrer todos los eventos y asignar estado basado en inscripción
-    props.eventos.forEach((evento) => {
-      const participante = participantes.find((p) => p.evento === evento.id);
-      estadoEventos.value[evento.id] = participante ? participante.id : null; // Guardar ID del participante
-    });
-  } catch (err) {
-    console.error('Error al sincronizar eventos inscritos:', err.response?.data || err.message);
-  }
-};
-
-// Recalcular estado cuando cambien los eventos
-watch(() => props.eventos, inicializarEstado);
-
+// Sincronizar inscripciones al montar el componente
 onMounted(() => {
-  inicializarEstado();
   sincronizarEstadoEventos();
 });
 </script>
@@ -112,7 +137,7 @@ onMounted(() => {
             <button
               class="btn btn-primary btn-sm"
               @click="handleInscribirse(evento.id)"
-              :disabled="estadoEventos[evento.id] !== null"
+              :disabled="estadoEventos[evento.id] !== null" 
             >
               Inscribirse
             </button>
@@ -121,14 +146,9 @@ onMounted(() => {
             <button
               class="btn btn-danger btn-sm ms-2"
               @click="handleDesinscribirse(evento.id)"
-              :disabled="estadoEventos[evento.id] === null"
+              :disabled="estadoEventos[evento.id] === null" 
             >
               Desinscribirse
-            </button>
-
-            <!-- Botón para ver detalles -->
-            <button class="btn btn-info btn-sm ms-2" @click="handleVerDetalles(evento.id)">
-              Ver Detalles
             </button>
           </td>
         </tr>
