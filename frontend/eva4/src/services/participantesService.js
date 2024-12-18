@@ -1,7 +1,10 @@
 import apiClient from './apiClient';
 
-const getParticipantes = async () => {
-  return apiClient.get('participantes/');
+// const getParticipantes = async () => {
+//   return apiClient.get('participantes/');
+// };
+const getParticipantes = async (params = {}) => {
+  return apiClient.get('participantes/', { params });
 };
 
 const getParticipante = async (id) => {

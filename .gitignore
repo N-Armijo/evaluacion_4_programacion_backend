@@ -1,44 +1,53 @@
-# Logs
-logs
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Entornos virtuales de Python
+backend/entorno/
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Node.js
+node_modules/
+frontend/eva4/node_modules/
+dist/
+build/
+
+# Archivos de configuración locales
+.env
+.env.local
 *.log
+
+# Archivos de IDEs/editores
+.vscode/
+.idea/
+*.iml
+
+# Archivos de testing
+coverage/
+*.cover
+.nyc_output/
+.vitest/
+
+# Cache de paquetes
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+package-lock.json
 
-node_modules
-.DS_Store
-dist
-dist-ssr
-coverage
-*.local
+# Configuración temporal de Python
+pip-log.txt
+pip-delete-this-directory.txt
 
-/cypress/videos/
-/cypress/screenshots/
+# Archivos específicos de Vite
+.vite/
+.vitepress/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Archivos de Git específicos
+*.swp
+*.swo
+.git/
 
-*.tsbuildinfo
-
-#Backend
-# Entorno virtual
-entorno
-
-
-# Archivos de migraciones temporales
-*/migrations/__pycache__/
-*.pyc
-__pycache__/
-
-# Archivos generados por Django
-/backend/db.sqlite3
-/backend/staticfiles/
+# Generados por npm
+*.tgz
