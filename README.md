@@ -26,43 +26,43 @@ Sistema web que permite gestionar eventos, categorías y participantes a través
 *Vista de la API mostrando la lista de participantes registrados*
 
 ### Capturas de sistema
-![Vista sistema](/images/imagen1.png)
+![Vista sistema](/images/Imagen1.png)
 *Vista Home*
 
-![Vista sistema](/images/imagen2.png)
+![Vista sistema](/images/Imagen2.png)
 *Vista Registro*
 
-![Vista sistema](/images/imagen4.png)
+![Vista sistema](/images/Imagen4.png)
 *Vista Registro exitoso*
 
-![Vista sistema](/images/imagen5.png)
+![Vista sistema](/images/Imagen5.png)
 *Redireccion automatico a Home*
 
-![Vista sistema](/images/imagen6.png)
+![Vista sistema](/images/Imagen6.png)
 *Vista de eventos usuario regular*
 
-![Vista sistema](/images/imagen11.png)
+![Vista sistema](/images/Imagen11.png)
 *Vista inicio de sesion exitoso*
 
-![Vista sistema](/images/imagen12.png)
+![Vista sistema](/images/Imagen12.png)
 *Redireccion automatico a Home*
 
-![Vista sistema](/images/imagen13.png)
+![Vista sistema](/images/Imagen13.png)
 *Vista de Eventos del Administrador*
 
-![Vista sistema](/images/imagen14.png)
+![Vista sistema](/images/Imagen14.png)
 *Vista del formulario de crear/editar Eventos del Administrador*
 
-![Vista sistema](/images/imagen15.png)
+![Vista sistema](/images/Imagen15.png)
 *Vista del tabla de eliminar/editar y filtros de Eventos para Administrador*
 
-![Vista sistema](/images/imagen16.png)
+![Vista sistema](/images/Imagen16.png)
 *Vista del tabla de eliminar/editar y formulario de crear Categorias para Administrador*
 
-![Vista sistema](/images/imagen17.png)
+![Vista sistema](/images/Imagen17.png)
 *Vista de formulario de crear Participantes para Administrador*
 
-![Vista sistema](/images/imagen19.png)
+![Vista sistema](/images/Imagen19.png)
 *Vista de filtros Participantes para Administrador*
 
 
