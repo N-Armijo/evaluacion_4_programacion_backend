@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework.documentation import include_docs_urls
 from api.views import (
     CategoriaViewSet,
     EventoViewSet,
@@ -53,4 +54,6 @@ urlpatterns = [
     # Rutas adicionales
     path('api/eventos-inscritos/', eventos_inscritos, name='eventos_inscritos'),
     path('api/usuarios/', listar_usuarios, name='listar_usuarios'),  # Ruta para listar usuarios registrados
+
+    path('docs/', include_docs_urls(title='API Documentation', permission_classes=[])), 
 ]
