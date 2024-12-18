@@ -61,7 +61,7 @@ cd [backend]
      ```bash
      python -m venv entorno
      entorno\Scripts\activate
-
+     ```
      En Windows PowerShell:
    ```powershell
      python -m venv env
@@ -74,7 +74,7 @@ cd [backend]
    ```powershell
    ./env/Scripts/activate
    ```
-     ```
+  
    - En Linux/Mac:
      ```bash
      python -m venv entorno
