@@ -1,182 +1,229 @@
 # evaluacion_4_programacion_backend
+# Sistema de Organización de Eventos
 
-## Documentación del Proyecto: Sistema de Gestión de Eventos
+Sistema web que permite gestionar eventos, categorías y participantes a través de una API REST desarrollada con Django REST Framework y una interfaz de usuario construida en Vue.js.
+## Capturas del Sistema
 
-## Objetivo del Proyecto
-El objetivo de este proyecto es desarrollar un sistema de gestión de eventos con funcionalidades para administrar **participantes**, **eventos** y **usuarios**. La aplicación cuenta con un backend desarrollado en **Django Rest Framework** (DRF) y un frontend en **Vue.js**.
+### Estructura del Proyecto
+![Estructura del Proyecto](/images/estructura_proyecto.png)
+*Estructura del proyecto mostrando la organización de archivos y carpetas*
 
----
+### Panel de Administración
+![Login Panel](/images/admin_login.png)
+*Panel de inicio de sesión del administrador*
 
-## Estructura del Proyecto
+![Panel de Administración](/images/admin_panel.png)
+*Panel de administración de Django mostrando las opciones de gestión*
+
+### API REST
+![API Eventos](/images/api_eventos.png)
+*Vista de la API mostrando la lista de eventos disponibles*
+
+![API Categorías](/images/api_categorias.png)
+*Vista de la API mostrando las categorías del sistema*
+
+![API Participantes](/images/api_participantes.png)
+*Vista de la API mostrando la lista de participantes registrados*
+
+
+
+##Características
+
+- Gestión completa de eventos (CRUD)
+- Categorización de eventos
+- Sistema de registro de participantes
+- API RESTful con autenticación JWT
+- Protección de datos sensibles (emails)
+- Validaciones para evitar registros duplicados
+- Interfaz administrativa Django
+- Frontend en Vue.js (en desarrollo)
+
+## Requisitos Previos
+
+```plaintext
+asgiref==3.8.1
+Django==5.1.4
+django-cors-headers==4.6.0
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+PyJWT==2.10.1
+sqlparse==0.5.3
+tzdata==2024.2
 ```
-.
-|-- backend/            # Backend (API REST con Django)
-|   |-- entorno/        # Entorno virtual
-|   |-- mi_api/         # Proyecto Django
-|   |-- api/            # Aplicación principal
-|   |-- db.sqlite3      # Base de datos SQLite
-|   `-- manage.py       # Comando principal de Django
-|
-|-- frontend/           # Frontend (Vue.js con Vite)
-|   |-- eva4/           # Proyecto Vue.js
-|   |-- node_modules/   # Dependencias de Node.js
-|   |-- public/         # Archivos públicos
-|   |-- src/            # Código fuente de Vue.js
-|   |-- package.json    # Configuración de dependencias
-|   `-- vite.config.js  # Configuración de Vite
-|
-`-- README.md           # Documentación del proyecto
+
+## Instalación
+
+### Backend (Django)
+
+1. Clonar el repositorio
+```bash
+git clone [URL_DEL_REPOSITORIO]
+cd [NOMBRE_DEL_PROYECTO]
 ```
 
----
+2. Crear y activar entorno virtual
+```bash
+python -m venv entorno
+source entorno/Scripts/activate  
+```
 
-## Configuración y Ejecución del Proyecto
+3. Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
 
-### 1. Requisitos previos
-Asegúrate de tener instalados:
-- **Python 3.12.x** o superior
-- **Node.js** y **npm** (v16+ recomendado)
-- **Virtualenv** para crear entornos virtuales
+4. Realizar migraciones
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 
-### 2. Configuración del Backend
-1. Accede a la carpeta **backend**:
-   ```bash
-   cd backend
-   ```
-2. Crea y activa el entorno virtual:
-   - En Windows:
-     ```bash
-     python -m venv entorno
-     entorno\Scripts\activate
-     ```
-   - En Linux/Mac:
-     ```bash
-     python -m venv entorno
-     source entorno/bin/activate
-     ```
-3. Instala las dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Realiza las migraciones y crea la base de datos:
-   ```bash
-   python manage.py migrate
-   ```
-5. Crea un superusuario para acceder al panel de administración:
-   ```bash
-   python manage.py createsuperuser
-   ```
-6. Ejecuta el servidor local de Django:
-   ```bash
-   python manage.py runserver
-   ```
-   El backend estará disponible en: [http://127.0.0.1:8000](http://127.0.0.1:8000).
+5. Crear superusuario
+```bash
+python manage.py createsuperuser
+```
 
-### 3. Configuración del Frontend
-1. Accede a la carpeta **frontend/eva4**:
-   ```bash
-   cd frontend/eva4
-   ```
-2. Instala las dependencias del proyecto Vue.js:
-   ```bash
-   npm install
-   ```
-3. Ejecuta el servidor local de desarrollo:
-   ```bash
-   npm run dev
-   ```
-   El frontend estará disponible en: [http://localhost:5173](http://localhost:5173).
+6. Iniciar servidor
+```bash
+python manage.py runserver
+```
 
-### 4. Probar el Proyecto
-1. Accede a la URL del frontend: [http://localhost:5173](http://localhost:5173).
-2. Desde el frontend, puedes interactuar con la API del backend configurada en [http://127.0.0.1:8000](http://127.0.0.1:8000).
-3. Usa las siguientes funcionalidades:
-   - Administrar **participantes** (crear, actualizar, listar y eliminar).
-   - Administrar **eventos** y filtrar por categoría.
-   - Gestionar **usuarios** registrados.
+### Frontend (Vue.js)
 
----
+#### Características del Frontend
+- Interfaz de usuario intuitiva para gestión de eventos
+- Sistema de autenticación para usuarios
+- Visualización de eventos por categorías
+- Registro de participantes en eventos
+- Vista de participantes por evento
 
-## Descripción de Modelos y Endpoints
+#### Funcionalidades Principales
+1. **Gestión de Eventos**
+   - Lista de eventos disponibles
+   - Filtrado por categorías
+   - Detalles de cada evento
 
-### Modelos Principales
-1. **Evento**: Representa un evento registrado en el sistema.
-   - Campos: `id`, `titulo`, `descripcion`, `fecha`, `categoria`.
-2. **Participante**: Representa a una persona inscrita en un evento.
-   - Campos: `id`, `nombre`, `correo`, `evento` (relación con el modelo Evento).
-3. **Usuario**: Usuarios registrados con permisos de acceso.
+2. **Sistema de Usuarios**
+   - Registro de usuarios
+   - Login/Logout
+   - Perfil de usuario
 
-### Endpoints de la API
-| Método | URL                       | Descripción                       |
-|---------|---------------------------|-----------------------------------|
-| GET     | `/api/eventos/`           | Listar eventos                   |
-| POST    | `/api/eventos/`           | Crear un nuevo evento            |
-| GET     | `/api/participantes/`     | Listar participantes             |
-| POST    | `/api/participantes/`     | Crear un participante            |
-| PUT     | `/api/participantes/{id}/`| Actualizar un participante       |
-| DELETE  | `/api/participantes/{id}/`| Eliminar un participante         |
-| POST    | `/api/register/`          | Registrar un nuevo usuario       |
-| POST    | `/api/token/`             | Obtener un token JWT             |
-| POST    | `/api/token/refresh/`     | Refrescar un token JWT           |
+3. **Participantes**
+   - Registro en eventos
+   - Lista de participantes
+   - Estado de inscripciones
 
-### Ejemplos de Uso de la API
+#### Tecnologías Utilizadas
+- Vue.js 3
+- Axios para peticiones HTTP
+- Vue Router para navegación
+- Vuex para gestión de estado
 
-#### Obtener un Token JWT
-**Solicitud**:
-```http
+#### Instalación Frontend
+```bash
+cd frontend
+npm install
+npm run serve
+```
+
+## Modelos
+
+### Categoria
+```python
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+```
+
+### Evento
+```python
+class Evento(models.Model):
+    titulo = models.CharField(max_length=200)
+    fecha = models.DateField()
+    hora = models.TimeField()
+    ubicacion = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+```
+
+### Participante
+```python
+class Participante(models.Model):
+    nombre = models.CharField(max_length=150)
+    correo = models.EmailField()
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE)
+```
+
+## API Endpoints
+
+### Autenticación
+- `POST /api/register/` - Registro de nuevos usuarios
+- `POST /api/token/` - Obtener token JWT
+- `POST /api/token/refresh/` - Refrescar token JWT
+
+### Eventos
+- `GET /api/eventos/` - Listar eventos
+- `POST /api/eventos/` - Crear evento
+- `GET /api/eventos/{id}/` - Obtener evento específico
+- `PUT /api/eventos/{id}/` - Actualizar evento
+- `DELETE /api/eventos/{id}/` - Eliminar evento
+- `GET /eventos-inscritos/` - Eventos del usuario actual
+
+### Participantes
+- `GET /api/participantes/` - Listar participantes
+- `POST /api/participantes/` - Registrarse en evento
+- `DELETE /api/participantes/{id}/` - Cancelar registro
+
+### Categorías
+- `GET /api/categorias/` - Listar categorías
+- `POST /api/categorias/` - Crear categoría (admin)
+- `PUT /api/categorias/{id}/` - Actualizar categoría (admin)
+- `DELETE /api/categorias/{id}/` - Eliminar categoría (admin)
+
+## Características de Seguridad
+
+- Autenticación JWT
+- Protección de datos sensibles
+- Validación de registros duplicados
+- Permisos basados en roles
+- Control de acceso para operaciones CRUD
+
+## Ejemplos de Uso
+
+### Obtener Token de Acceso
+```bash
 POST /api/token/
-Content-Type: application/json
-
 {
-  "username": "usuario",
-  "password": "contraseña"
-}
-```
-**Respuesta**:
-```json
-{
-  "access": "<TOKEN_DE_ACCESO>",
-  "refresh": "<TOKEN_DE_REFRESH>"
+    "username": "usuario",
+    "password": "contraseña"
 }
 ```
 
-#### Crear un Participante
-**Solicitud**:
-```http
+### Crear Evento (Admin)
+```bash
+POST /api/eventos/
+{
+    "titulo": "Conferencia Tech 2024",
+    "fecha": "2024-12-20",
+    "hora": "15:00",
+    "ubicacion": "Centro de Eventos",
+    "descripcion": "Conferencia sobre nuevas tecnologías",
+    "categoria": 1
+}
+```
+
+### Registrarse en Evento
+```bash
 POST /api/participantes/
-Authorization: Bearer <TOKEN_DE_ACCESO>
-Content-Type: application/json
-
 {
-  "nombre": "Juan Perez",
-  "correo": "juanperez@example.com",
-  "evento": 1
-}
-```
-**Respuesta**:
-```json
-{
-  "id": 1,
-  "nombre": "Juan Perez",
-  "correo": "juanperez@example.com",
-  "evento": 1
+    "evento": 1
 }
 ```
 
----
+## Equipo de Desarrollo
 
-## Herramientas y Tecnologías
-- **Backend**: Python, Django Rest Framework (DRF), JWT para autenticación.
-- **Frontend**: Vue.js 3 con Vite, Bootstrap 5.
-- **Base de datos**: SQLite (entorno de desarrollo).
-- **Servidor local**: Django Development Server y Vite Dev Server.
+- Norma Armijo - Backend 
+- Camilo Zamora - Frontend 
+- Ester Godoy - Documentation
 
----
-
-## Autores
-- **Nombre del autor**: Camilo Zamora - Ester Godoy - Norma Armijo
-
----
-
-#
 
