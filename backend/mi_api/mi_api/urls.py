@@ -17,29 +17,40 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from api.views import CategoriaViewSet, EventoViewSet, ParticipanteViewSet, register_user, CustomTokenObtainPairView , eventos_inscritos
+from api.views import (
+    CategoriaViewSet,
+    EventoViewSet,
+    ParticipanteViewSet,
+    register_user,
+    CustomTokenObtainPairView,
+    eventos_inscritos,
+    listar_usuarios,
+)
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
 # Configurar router para las rutas de la API
 router = DefaultRouter()
-router.register(r'categorias', CategoriaViewSet)
-router.register(r'eventos', EventoViewSet)
-router.register(r'participantes', ParticipanteViewSet)
+router.register(r'categorias', CategoriaViewSet, basename='categorias')
+router.register(r'eventos', EventoViewSet, basename='eventos')
+router.register(r'participantes', ParticipanteViewSet, basename='participantes')
 
 urlpatterns = [
+    # Rutas de administración
     path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),  # ruta base para la API
 
-    path('api/register/', register_user, name='register_user'), #ruta registrar usuario
+    # Rutas base para la API
+    path('api/', include(router.urls)),
 
-    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # Ruta para registrar usuarios
+    path('api/register/', register_user, name='register_user'),
+
+    # Rutas para autenticación con JWT
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-
-    path('eventos-inscritos/', eventos_inscritos, name='eventos_inscritos'),
-
+    # Rutas adicionales
+    path('api/eventos-inscritos/', eventos_inscritos, name='eventos_inscritos'),
+    path('api/usuarios/', listar_usuarios, name='listar_usuarios'),  # Ruta para listar usuarios registrados
 ]

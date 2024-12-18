@@ -1,62 +1,33 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
+import participantesService from '@/services/participantesService';
+import usuariosService from '@/services/usuariosService';
+import eventosService from '@/services/eventosService';
 import FormParticipante from '@/components/FormParticipante.vue';
 import TablaParticipantes from '@/components/TablaParticipantes.vue';
-import participantesService from '@/services/participantesService';
-import eventosService from '@/services/eventosService';
 
-const participantes = ref([]);
-const eventos = ref([]);
+const participantes = ref([]); // Lista de participantes
+const eventos = ref([]); // Lista de eventos disponibles
+const usuarios = ref([]); // Lista de usuarios registrados
 const nuevoParticipante = ref({
   id: null,
-  nombre: '',
   correo: '',
   evento: '',
 });
-const isUpdating = ref(false);
+const isUpdating = ref(false); // Define si estamos actualizando un participante
 const error = ref(null);
 
-// Filtros
-const filtroTexto = ref('');
-const filtroEvento = ref('');
-
-// Paginación
-const pagination = ref({ count: 0, next: null, previous: null });
-const currentPage = ref(1);
-
-// Computed para aplicar filtros dinámicamente
-const participantesFiltrados = computed(() => {
-  let filtrados = participantes.value.filter((participante) =>
-    participante.nombre.toLowerCase().includes(filtroTexto.value.toLowerCase()) ||
-    participante.correo.toLowerCase().includes(filtroTexto.value.toLowerCase())
-  );
-
-  if (filtroEvento.value) {
-    filtrados = filtrados.filter(
-      (participante) => participante.evento === parseInt(filtroEvento.value, 10)
-    );
-  }
-
-  return filtrados;
-});
-
-// Cargar participantes desde el backend
-const fetchParticipantes = async (page = 1) => {
+// Cargar lista de participantes desde el backend
+const fetchParticipantes = async () => {
   try {
-    const response = await participantesService.getParticipantes({ page });
-    participantes.value = response.data.results;
-    pagination.value = {
-      count: response.data.count,
-      next: response.data.next,
-      previous: response.data.previous,
-    };
-    currentPage.value = page;
+    const response = await participantesService.getParticipantes();
+    participantes.value = response.data.results || response.data; // Adaptar según formato del backend
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al cargar participantes';
   }
 };
 
-// Cargar eventos desde el backend
+// Cargar lista de eventos
 const fetchEventos = async () => {
   try {
     const response = await eventosService.getEventos();
@@ -66,7 +37,17 @@ const fetchEventos = async () => {
   }
 };
 
-// Crear o actualizar un participante
+// Cargar lista de usuarios registrados
+const fetchUsuarios = async () => {
+  try {
+    const response = await usuariosService.getUsuarios();
+    usuarios.value = response.data; // Asegúrate de que el backend devuelva [{id, username, email}]
+  } catch (err) {
+    error.value = err.response?.data?.detail || 'Error al cargar usuarios';
+  }
+};
+
+// Crear o actualizar participante
 const crearOActualizarParticipante = async (participante) => {
   try {
     if (isUpdating.value) {
@@ -76,115 +57,70 @@ const crearOActualizarParticipante = async (participante) => {
       await participantesService.createParticipante(participante);
       alert('Participante creado con éxito');
     }
-    await fetchParticipantes(currentPage.value);
+    await fetchParticipantes();
     resetFormulario();
   } catch (err) {
     error.value = err.response?.data || 'Error al crear/actualizar participante';
   }
 };
 
-// Eliminar un participante
+// Eliminar participante
 const eliminarParticipante = async (id) => {
   try {
     await participantesService.deleteParticipante(id);
     alert('Participante eliminado con éxito');
-    await fetchParticipantes(currentPage.value);
+    await fetchParticipantes();
   } catch (err) {
     error.value = err.response?.data?.detail || 'Error al eliminar participante';
   }
 };
 
-// Cargar datos del participante en el formulario para edición
+// Preparar formulario para edición
 const cargarParticipanteParaActualizar = (participante) => {
   isUpdating.value = true;
   nuevoParticipante.value = { ...participante };
 };
 
-// Resetear el formulario
+// Resetear formulario
 const resetFormulario = () => {
   nuevoParticipante.value = {
     id: null,
-    nombre: '',
     correo: '',
     evento: '',
   };
   isUpdating.value = false;
 };
 
-// Cambiar página
-const cambiarPagina = (page) => {
-  if (page > 0 && (pagination.value.next || pagination.value.previous)) {
-    fetchParticipantes(page);
-  }
-};
-
+// Cargar datos al montar la vista
 onMounted(() => {
   fetchParticipantes();
   fetchEventos();
+  fetchUsuarios();
 });
 </script>
 
 <template>
-  <div class="mx-auto">
+  <div>
     <h2 class="text-center my-4">Gestión de Participantes</h2>
 
-    <!-- Filtros -->
-    <div class="col-12 col-md-8 mx-auto mb-3">
-      <div class="row">
-        <div class="col-md-6">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Buscar por nombre o correo"
-            v-model="filtroTexto"
-          />
-        </div>
-        <div class="col-md-6">
-          <select
-            class="form-select"
-            v-model="filtroEvento"
-          >
-            <option value="">Todos los eventos</option>
-            <option v-for="evento in eventos" :key="evento.id" :value="evento.id">
-              {{ evento.titulo }}
-            </option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Formulario -->
+    <!-- Formulario de Participante -->
     <FormParticipante
       :participante="nuevoParticipante"
       :eventos="eventos"
+      :usuarios="usuarios"
       :isUpdating="isUpdating"
       @submitForm="crearOActualizarParticipante"
       @cancelForm="resetFormulario"
     />
 
-    <!-- Tabla -->
+    <!-- Tabla de Participantes -->
     <TablaParticipantes
-      :participantes="participantesFiltrados"
+      :participantes="participantes"
       @editParticipante="cargarParticipanteParaActualizar"
       @deleteParticipante="eliminarParticipante"
     />
 
-    <!-- Paginación -->
-    <nav v-if="pagination.count > participantes.length" class="mt-3">
-      <ul class="pagination justify-content-center">
-        <li class="page-item" :class="{ disabled: !pagination.previous }">
-          <button class="page-link" @click="cambiarPagina(currentPage - 1)">
-            Anterior
-          </button>
-        </li>
-        <li class="page-item" :class="{ disabled: !pagination.next }">
-          <button class="page-link" @click="cambiarPagina(currentPage + 1)">
-            Siguiente
-          </button>
-        </li>
-      </ul>
-    </nav>
-
+    <!-- Mostrar error si existe -->
     <p v-if="error" class="text-danger text-center mt-3">Error: {{ error }}</p>
   </div>
 </template>

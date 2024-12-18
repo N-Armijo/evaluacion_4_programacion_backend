@@ -18,12 +18,12 @@ class ParticipanteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participante
         fields = ['id', 'nombre', 'correo', 'evento']
-        read_only_fields = ['nombre', 'correo']  # Estos campos serán gestionados automáticamente
-        # extra_kwargs = {
-        #     'nombre': {'error_messages': {'blank': "El nombre no puede estar vacío."}},
-        #     'correo': {'error_messages': {'blank': "El correo no puede estar vacío."}},
-        #     'evento': {'error_messages': {'null': "Debe especificar un evento válido."}}
-        # }
+        # Los campos 'nombre' y 'correo' no deben ser solo de lectura
+        # para permitir que el frontend los proporcione.
+        extra_kwargs = {
+            'nombre': {'required': True},
+            'correo': {'required': True}
+        }
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -34,7 +34,7 @@ class ParticipanteSerializer(serializers.ModelSerializer):
             representation.pop('correo', None)
 
         return representation
-    
+
     def validate(self, data):
         # Validar que un usuario no se registre dos veces en el mismo evento
         evento = data.get('evento')
@@ -44,15 +44,14 @@ class ParticipanteSerializer(serializers.ModelSerializer):
             raise ValidationError("Este usuario ya está registrado en el evento.")
         
         return data
-    
-    #Inicio Cambio
+
     def create(self, validated_data):
-        # Sobrescribir nombre y correo con los datos del usuario autenticado
-        user = self.context['request'].user
-        validated_data['nombre'] = user.username
-        validated_data['correo'] = user.email
+        """
+        Utiliza los datos proporcionados por el frontend.
+        """
         return super().create(validated_data)
-    #Fin Cambio
+
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, min_length=8)
 
@@ -79,3 +78,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Agregar el campo `is_superuser` al payload del token
         token['is_superuser'] = user.is_superuser
         return token
+    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']  # Agregar los campos requeridos

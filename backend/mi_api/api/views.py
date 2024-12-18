@@ -1,39 +1,34 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import BasePermission, AllowAny
+from rest_framework.permissions import BasePermission, AllowAny, IsAdminUser
 from rest_framework import status
 from .models import Categoria, Evento, Participante
-from .serializers import CategoriaSerializer, EventoSerializer, ParticipanteSerializer, UserSerializer, CustomTokenObtainPairSerializer
+from .serializers import (
+    CategoriaSerializer,
+    EventoSerializer,
+    ParticipanteSerializer,
+    UserSerializer,
+    CustomTokenObtainPairSerializer
+)
+from django.contrib.auth.models import User
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.exceptions import ValidationError
 
 
-
-
 # Permiso para solo lectura o acceso completo para superusuarios
 class IsAdminOrReadOnly(BasePermission):
-    """
-    Permite acceso de solo lectura para usuarios regulares. Escritura solo para superusuarios.
-    """
     def has_permission(self, request, view):
-        # Métodos seguros permitidos para todos
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        # Métodos de escritura permitidos solo a superusuarios
         return request.user.is_superuser
 
 
 # Permiso para gestionar solo los propios registros como participante
 class IsOwnerOrAdmin(BasePermission):
-    """
-    Permite acceso total a superusuarios. Usuarios regulares solo pueden gestionar sus propios registros.
-    """
     def has_object_permission(self, request, view, obj):
-        # Superusuarios tienen acceso completo
         if request.user.is_superuser:
             return True
-        # Usuarios regulares solo pueden acceder a sus propios registros
         return obj.correo == request.user.email
 
 
@@ -64,11 +59,8 @@ class EventoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='participantes')
     def listar_participantes(self, request, pk=None):
-        """
-        Lista los nombres de los participantes de un evento y el total de inscritos.
-        """
-        evento = self.get_object()  # Obtener el evento actual por ID
-        participantes = evento.participantes.all()  # Obtener los participantes relacionados
+        evento = self.get_object()
+        participantes = evento.participantes.all()
         nombres = [participante.nombre for participante in participantes]
         total = participantes.count()
 
@@ -87,26 +79,25 @@ class ParticipanteViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Inscribe al usuario autenticado en un evento, evitando duplicados.
+        Crear un participante utilizando datos proporcionados desde el frontend
+        cuando es un superusuario. Si no, utiliza los datos del usuario autenticado.
         """
-        evento = serializer.validated_data.get('evento')
-        correo = self.request.user.email
+        if self.request.user.is_superuser:
+            serializer.save()  # Permitir al superusuario enviar todos los datos
+        else:
+            evento = serializer.validated_data.get('evento')
+            correo = self.request.user.email
 
-        if Participante.objects.filter(evento=evento, correo=correo).exists():
-            raise ValidationError("Ya estás inscrito en este evento.")
+            if Participante.objects.filter(evento=evento, correo=correo).exists():
+                raise ValidationError("Ya estás inscrito en este evento.")
 
-        serializer.save(
-            nombre=self.request.user.username,
-            correo=self.request.user.email
-        )
+            serializer.save(
+                nombre=self.request.user.username,
+                correo=self.request.user.email
+            )
 
     def destroy(self, request, *args, **kwargs):
-        """
-        Permite a los usuarios desinscribirse de un evento al que están inscritos.
-        """
         participante = self.get_object()
-
-        # Verificar que el participante corresponde al usuario autenticado
         if participante.correo != request.user.email and not request.user.is_superuser:
             return Response(
                 {"detail": "No tienes permiso para eliminar este registro."},
@@ -114,35 +105,34 @@ class ParticipanteViewSet(viewsets.ModelViewSet):
             )
 
         self.perform_destroy(participante)
-        print(f"Participante eliminado: {participante.correo} del evento {participante.evento.id}")
         return Response({"detail": "Te has desinscrito del evento con éxito."}, status=status.HTTP_204_NO_CONTENT)
 
 
-
-
-
-# Endpoint para registrar usuarios
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Permitir acceso sin autenticación
+@permission_classes([AllowAny])
 def register_user(request):
-    """
-    Endpoint para registrar nuevos usuarios.
-    """
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response({"message": "Usuario registrado con éxito."}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+
 @api_view(['GET'])
 def eventos_inscritos(request):
-    """
-    Devuelve una lista de eventos en los que el usuario autenticado está inscrito.
-    """
     inscritos = Participante.objects.filter(correo=request.user.email)
     eventos = [inscrito.evento for inscrito in inscritos]
     serializer = EventoSerializer(eventos, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def listar_usuarios(request):
+    usuarios = User.objects.all()
+    serializer = UserSerializer(usuarios, many=True)
+    return Response(serializer.data, status=200)
