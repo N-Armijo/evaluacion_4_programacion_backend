@@ -1,8 +1,13 @@
 import apiClient from './apiClient';
 
-const getCategorias = async () => {
-  return apiClient.get('categorias/');
+// const getCategorias = async () => {
+//   return apiClient.get('categorias/');
+// };
+
+const getCategorias = async (params = {}) => {
+  return apiClient.get('categorias/', { params });
 };
+
 
 const getCategoria = async (id) => {
   return apiClient.get(`categorias/${id}/`);
