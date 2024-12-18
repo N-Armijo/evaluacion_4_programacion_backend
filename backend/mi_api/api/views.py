@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import BasePermission, AllowAny, IsAdminUser
 from rest_framework import status
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 from .models import Categoria, Evento, Participante
 from .serializers import (
     CategoriaSerializer,
@@ -15,14 +17,12 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.exceptions import ValidationError
 
-
 # Permiso para solo lectura o acceso completo para superusuarios
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         return request.user.is_superuser
-
 
 # Permiso para gestionar solo los propios registros como participante
 class IsOwnerOrAdmin(BasePermission):
@@ -31,13 +31,16 @@ class IsOwnerOrAdmin(BasePermission):
             return True
         return obj.correo == request.user.email
 
+# Configuración de paginación personalizada
+class ParticipantePagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
 
 # ViewSet para Categorías
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     permission_classes = [IsAdminOrReadOnly]
-
 
 # ViewSet para Eventos
 class EventoViewSet(viewsets.ModelViewSet):
@@ -70,12 +73,25 @@ class EventoViewSet(viewsets.ModelViewSet):
             'nombres_participantes': nombres
         })
 
-
 # ViewSet para Participantes
 class ParticipanteViewSet(viewsets.ModelViewSet):
     queryset = Participante.objects.all()
     serializer_class = ParticipanteSerializer
     permission_classes = [IsOwnerOrAdmin]
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['nombre']  # Habilitar búsqueda por nombre
+    ordering_fields = ['nombre', 'evento']  # Permitir ordenamiento
+    pagination_class = ParticipantePagination  # Configurar paginación
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        evento = self.request.query_params.get('evento')
+
+        # Filtrar por evento si el parámetro está presente
+        if evento:
+            queryset = queryset.filter(evento_id=evento)
+
+        return queryset
 
     def perform_create(self, serializer):
         """
@@ -107,7 +123,6 @@ class ParticipanteViewSet(viewsets.ModelViewSet):
         self.perform_destroy(participante)
         return Response({"detail": "Te has desinscrito del evento con éxito."}, status=status.HTTP_204_NO_CONTENT)
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
@@ -117,10 +132,8 @@ def register_user(request):
         return Response({"message": "Usuario registrado con éxito."}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-
 
 @api_view(['GET'])
 def eventos_inscritos(request):
@@ -128,7 +141,6 @@ def eventos_inscritos(request):
     eventos = [inscrito.evento for inscrito in inscritos]
     serializer = EventoSerializer(eventos, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
