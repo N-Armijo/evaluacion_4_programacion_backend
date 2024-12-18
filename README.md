@@ -88,6 +88,7 @@ pip install -r requirements.txt
 
 4. Realizar migraciones
 ```bash
+cd mi_api
 python manage.py makemigrations
 python manage.py migrate
 ```
