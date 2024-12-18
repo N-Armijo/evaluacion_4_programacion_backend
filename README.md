@@ -40,16 +40,11 @@ Sistema web que permite gestionar eventos, categorías y participantes a través
 
 ## Requisitos Previos
 
-```plaintext
-asgiref==3.8.1
-Django==5.1.4
-django-cors-headers==4.6.0
-djangorestframework==3.15.2
-djangorestframework-simplejwt==5.3.1
-PyJWT==2.10.1
-sqlparse==0.5.3
-tzdata==2024.2
-```
+Asegúrate de tener instalados:
+- **Python 3.12.x** o superior
+- **Node.js** y **npm** (v16+ recomendado)
+- **Virtualenv** para crear entornos virtuales
+
 
 ## Instalación
 
@@ -57,15 +52,34 @@ tzdata==2024.2
 
 1. Clonar el repositorio
 ```bash
-git clone [URL_DEL_REPOSITORIO]
-cd [NOMBRE_DEL_PROYECTO]
+git clone [https://github.com/N-Armijo/evaluacion_4_programacion_backend.git]
+cd [backend]
 ```
 
 2. Crear y activar entorno virtual
-```bash
-python -m venv entorno
-source entorno/Scripts/activate  
-```
+- En Windows:
+     ```bash
+     python -m venv entorno
+     entorno\Scripts\activate
+
+     En Windows PowerShell:
+   ```powershell
+     python -m venv env
+   ```
+    Activar permisos de ejecucion de scripts que viene desactivada por defecto. Cuidado con los parametros. En este caso el -Scope de ejecucion es solo proceso
+   ```powershell
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+   ```
+    Activar el entorno virtual:
+   ```powershell
+   ./env/Scripts/activate
+   ```
+     ```
+   - En Linux/Mac:
+     ```bash
+     python -m venv entorno
+     source entorno/bin/activate
+     ```
 
 3. Instalar dependencias
 ```bash
@@ -87,6 +101,7 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
+7. El backend estará disponible tipicamente en: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ### Frontend (Vue.js)
 
@@ -120,11 +135,28 @@ python manage.py runserver
 - Vuex para gestión de estado
 
 #### Instalación Frontend
-```bash
-cd frontend
-npm install
-npm run serve
-```
+1. Accede a la carpeta **frontend/eva4**:
+   ```bash
+   cd frontend/eva4
+   ```
+2. Instala las dependencias del proyecto Vue.js:
+   ```bash
+   npm install
+   ```
+3. Ejecuta el servidor local de desarrollo:
+   ```bash
+   npm run dev
+   ```
+   El frontend estará disponible en: [http://localhost:5173](http://localhost:5173).
+
+### 4. Probar el Proyecto
+1. Accede a la URL del frontend: [http://localhost:5173](http://localhost:5173).
+2. Desde el frontend, puedes interactuar con la API del backend configurada en [http://127.0.0.1:8000](http://127.0.0.1:8000).
+3. Usa las siguientes funcionalidades:
+   - Administrar **participantes** (crear, actualizar, listar y eliminar).
+   - Administrar **eventos** y filtrar por categoría.
+   - Gestionar **usuarios** registrados.
+
 
 ## Modelos
 
@@ -179,6 +211,10 @@ class Participante(models.Model):
 - `POST /api/categorias/` - Crear categoría (admin)
 - `PUT /api/categorias/{id}/` - Actualizar categoría (admin)
 - `DELETE /api/categorias/{id}/` - Eliminar categoría (admin)
+
+### Documentacion de la API
+
+1. Accediendo a la siguiente ruta para mayor información de la API [http://127.0.0.1:8000/docs/](http://127.0.0.1:8000/docs/).
 
 ## Características de Seguridad
 
