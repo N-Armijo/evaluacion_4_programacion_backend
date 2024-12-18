@@ -52,8 +52,8 @@ Asegúrate de tener instalados:
 
 1. Clonar el repositorio
 ```bash
-git clone [https://github.com/N-Armijo/evaluacion_4_programacion_backend.git]
-cd [backend]
+git clone https://github.com/N-Armijo/evaluacion_4_programacion_backend.git
+cd backend
 ```
 
 2. Crear y activar entorno virtual
